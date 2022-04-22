@@ -9,11 +9,6 @@ import java.time.*;
 
 public class Server {
 
-    static String methodLine;
-    static String host;
-    static String userAgent;
-    static String accept;
-
     /**
      * < HTTP/1.1 200 OK                            200이랑 400번만 하는걸로.
      * < Date: Thu, 21 Apr 2022 02:56:58 GMT        date사용
@@ -45,7 +40,7 @@ public class Server {
 
                 while ((line = networkIn.readLine()) != null) {
                     if(line.startsWith("GET") || line.startsWith("POST")){
-                        methodLine = line;
+                        UriParseFactory.methodLine = line;
                     }
                     if(line.startsWith("Host")){
                         host = line.split(" ")[1];
@@ -63,7 +58,7 @@ public class Server {
                     System.out.println("클라이언트에서 보냄:[ " + line + " ]");
                 }
 
-                bodyInfo = loop(methodLine, socket);
+                bodyInfo = loop(UriParseFactory.methodLine, socket);
 
 //                BodyResourceByIp bodyRes = new BodyResourceByIp();
 //                ObjectMapper objectMapper = new ObjectMapper();
@@ -98,39 +93,46 @@ public class Server {
      *  bodyInfo += System.lineSeparator();
      */
     public String loop(String line, Socket socket) throws JsonProcessingException {
-        BodyResourceByGet bodyResourceByGet = new BodyResourceByGet();
-        ObjectMapper objectMapper = new ObjectMapper();
         String bodyInfo = null;
 
         String loop[] = line.split(" ");
 
-        if(loop[1].equals("/ip")){
-            System.out.println("IP로 요청");
-            Map<String, String> testArgs1 = new HashMap<>();
-            testArgs1.put("origin", socket.getRemoteSocketAddress().toString());
-            bodyInfo = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(testArgs1);
-            bodyInfo += System.lineSeparator();
-        } else if(loop[0].equals("GET")){
-            //if (args가 있다면){}
+        if(loop[0].equals("GET")){
+            bodyInfo = parseGet(loop, socket);
+
+        } else if(loop[0].equals("POST")){
+            bodyInfo = parsePost(loop, socket);
+        }
+        System.out.println(bodyInfo);
+        return bodyInfo;
+    }
+
+
+    private String parseGet(String[] loop, Socket socket) throws JsonProcessingException {
+        //TODO: 다형성 만들어야함
+        BodyResourceByGet bodyResourceByGet = new BodyResourceByGet();
+        BodyResourceByIp bodyResourceByIp = new BodyResourceByIp();
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        if (loop[1].equals("/ip")) {
+            bodyResourceByIp.setOrigin(socket.getRemoteSocketAddress().toString());
+            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(bodyResourceByIp) + System.lineSeparator();
+        } else {
+            if (loop[1].contains("?")) {
+                argExtract();
+                bodyResourceByGet.setArgs(args);
+            }
             bodyResourceByGet.setHeaders("Host", host);
             bodyResourceByGet.setHeaders("User-Agent", userAgent);
             bodyResourceByGet.setHeaders("Accept", accept);
             bodyResourceByGet.setOrigin(socket.getRemoteSocketAddress().toString());
-            bodyResourceByGet.setUrl(socket.getInetAddress().toString());
-            bodyInfo = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(bodyResourceByGet);
-            bodyInfo += System.lineSeparator();
-        } else if(loop[0].equals("POST")){
-            //TODO: post
+            bodyResourceByGet.setUrl(uri());
+            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(bodyResourceByGet) + System.lineSeparator();
         }
-        if(loop[0].equals("GET") && loop[1].equals("ip")){
-            Map<String, String> testArgs1 = new HashMap<>();
-            testArgs1.put("origin", socket.getRemoteSocketAddress().toString());
-            bodyInfo = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(testArgs1);
-        }
+    }
 
-        System.out.println(bodyInfo);
-        System.out.println(bodyResourceByGet.getHeaders().toString());
 
-        return bodyInfo;
+    private String parsePost(String[] loop, Socket socket) {
+        return null;
     }
 }

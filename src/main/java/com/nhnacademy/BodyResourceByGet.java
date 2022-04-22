@@ -18,6 +18,10 @@ public class BodyResourceByGet {
         this.url = url;
     }
 
+    public void setArgs(Map<String, String> args) {
+        this.args = args;
+    }
+
     public void setHeaders(String name, String value) {
         headers.put(name,value);
     }
