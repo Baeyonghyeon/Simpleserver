@@ -13,6 +13,7 @@ public class UriParseFactory {
     static String location; // /get
     static String httpVersion; // HTTP/1.1
 
+    static String contentLength;
     static String host;
     static String userAgent;
     static String accept;
@@ -20,8 +21,8 @@ public class UriParseFactory {
     //헤더에 인자를 넣어 get 요청을 할때 사용합니다.
     static HashMap<String, String> args = new HashMap<>();
 
-
     //body
+    static String contentJson;
     static String body;
     static HashMap<String,String> bodyJson = new HashMap<>();
 
@@ -59,6 +60,7 @@ public class UriParseFactory {
         for(String str : arg){
             str = str.replace("{", "");
             str = str.replace("}", "");
+            str = str.replace("\"","");
             String ary[] = str.split(":");
             bodyJson.put(ary[0],ary[1]);
         }

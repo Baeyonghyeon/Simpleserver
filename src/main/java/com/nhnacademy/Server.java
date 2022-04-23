@@ -1,13 +1,14 @@
 package com.nhnacademy;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import static com.nhnacademy.UriParseFactory.*;
@@ -48,28 +49,34 @@ public class Server {
             String response = new String(bytes, 0, numOfBytes, "UTF-8");
 
             String input[] = response.strip().split("\r\n\r\n");
+
             requestHeader = input[0];
             headerParse(requestHeader);
             methodLineSeparate();
 
-            System.out.println(requestHeader);
-            System.out.println("---------------------------------");
-            if(method.equals("POST")){
-                //bodyInfo = parsePost(socket);  // 기능 구현 중
+            System.out.println(requestHeader);          //헤더 출력용
+            //System.out.println("---------------------------------");    // 구분자 출력용
+            if (method.equals("POST")) {
                 requestBody = input[1];
                 body = requestBody;
-                System.out.println(requestBody);        //지울것
+                bodyDataExtract();
+                bodyInfo = parsePost(socket);
+                System.out.println(requestBody);        //바디 출력용
             }
             if (method.equals("GET")) {
                 bodyInfo = parseGet(socket);
             }
+
+            //테스트 공간
+            System.out.println("contentJson : " + contentJson);
+            //테스트 공간
 
             //TODO 헤더정보 (8줄)
             StringBuilder output = new StringBuilder();
             output.append(headFactory.getStateMessage());
             output.append(headFactory.getDate());
             output.append(headFactory.getContentType());
-            output.append(headFactory.contentLength(2222));
+            output.append(headFactory.contentLength(bodyInfo.length()));
             output.append(headFactory.getResponseHeaderOptionField());
             output.append(System.lineSeparator());
 
@@ -81,8 +88,6 @@ public class Server {
             e.printStackTrace();
         }
     }
-
-
     /***
      *  BodyResourceByIp bodyRes = new BodyResourceByIp();
      *  ObjectMapper objectMapper = new ObjectMapper();
@@ -90,22 +95,6 @@ public class Server {
      *  String bodyInfo = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(bodyRes);
      *  bodyInfo += System.lineSeparator();
      */
-    public String loop(String line, Socket socket) throws JsonProcessingException {
-        String bodyInfo = null;
-
-        String loop[] = line.split(" ");
-
-        if (loop[0].equals("GET")) {
-
-
-        } else if (loop[0].equals("POST")) {
-            //bodyInfo = bodyParse(loop, socket);
-        }
-        System.out.println(bodyInfo);
-        return bodyInfo;
-    }
-
-
     private String parseGet(Socket socket) throws JsonProcessingException {
         BodyResourceByGet bodyResourceByGet = new BodyResourceByGet();
         BodyResourceByIp bodyResourceByIp = new BodyResourceByIp();
@@ -128,38 +117,29 @@ public class Server {
         }
     }
 
-    private String parsePost(String[] loop, Socket socket) throws JsonProcessingException {
+    private String parsePost(Socket socket) throws IOException {
 
         BodyResourceByPost bodyResourceByPost = new BodyResourceByPost();
         ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, String> nullValue = new HashMap<>();
-        Map<String, String> headerValue = new HashMap<>();
-        headerValue.put("Accept", accept);
-        headerValue.put("Content-Length", "나중에 길이 받아서 넣기");   //TODO 컨탠츠 길이 변수 파싱해서 넣기
-        headerValue.put("Content-Type", contentType);
-        headerValue.put("Host", host);
-        headerValue.put("User-Agent", userAgent);
 
         if (contentType.contains("application/json")) {
-            bodyResourceByPost.setData(body); //TODO 변수 넣기
-            bodyResourceByPost.setFiles(nullValue);
-            bodyResourceByPost.setJson(bodyJson);  //TODO dataJson으로 넘겨받은 parse를 json으로 넣기
-        } else if (contentType.contains("multipart/form-data")) {
-
-            bodyResourceByPost.setFiles(nullValue); //TODO  실제 파일 열어서 json파일가져와서 넣기.
+            bodyResourceByPost.setData(body);
+            bodyResourceByPost.setJson(bodyJson);
         }
-        bodyResourceByPost.setHeaders(headerValue);
-        bodyResourceByPost.setArgs(nullValue);
-        bodyResourceByPost.setForm(nullValue);
+        if (contentType.contains("multipart/form-data")) {
+            System.out.println("json이 번역되어 나와야 합니다 : "+createFileObject());
+            System.out.println("json이 번역되어 나와야 합니다");
+            bodyResourceByPost.setFiles("upload", "josn파일_읽은것_넣기"); //TODO  실제 파일 열어서 json파일가져와서 넣기.
+        }
+        bodyResourceByPost.setHeaders("Accept", accept);
+        bodyResourceByPost.setHeaders("Content-Type", contentType);
+        bodyResourceByPost.setHeaders("Host", host);
+        bodyResourceByPost.setHeaders("User-Agent", userAgent);
+        bodyResourceByPost.setHeaders("Accept", accept);
+        bodyResourceByPost.setHeaders("Content-Length", contentLength);
         bodyResourceByPost.setOrigin(socket.getRemoteSocketAddress().toString());
         bodyResourceByPost.setUrl(uri());
         return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(bodyResourceByPost) + System.lineSeparator();
-    }
-
-
-
-        private void bodyParse(String[] loop, Socket socket) {
-
     }
 
     private void headerParse(String requestHeader) throws IOException {
@@ -178,8 +158,12 @@ public class Server {
             if (line.startsWith("Accept")) {
                 accept = line.split(" ")[1];
             }
-            if (line.equals("Content-Type")) {
-                contentType = line.split(" ")[1];
+            if (line.startsWith("Content-Type")) {
+                contentType = line.split(" ")[1] + " " + line.split(" ")[2];
+                contentJson = line.split(" ")[2].split("=")[1];
+            }
+            if (line.startsWith("Content-Length")) {
+                contentLength = line.split(" ")[1];
             }
             if (line.equals("")) {
                 break;
@@ -187,4 +171,35 @@ public class Server {
         }
     }
 
+    private String createFileObject() throws IOException {
+
+        byte[] bytes = contentType.getBytes(StandardCharsets.UTF_8);
+
+        StringBuilder sb = new StringBuilder();
+        boolean start = false;
+
+        for (byte b: bytes) {
+            String s = Character.toString(b);
+            System.out.println(s);
+            if ("{".equals(s)) {
+                start = true;
+            }
+            if (start) {
+                sb.append(s);
+            }
+            if ("}".equals(s)) {
+                start = false;
+            }
+        }
+
+        System.out.println("data:" + sb);
+//
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        Map<String, String> tempMap = objectMapper.readValue(sb.toString(), new TypeReference<Map<String, String>>() {
+//        });
+//
+//        System.out.println(tempMap);
+
+        return sb.toString();
+    }
 }

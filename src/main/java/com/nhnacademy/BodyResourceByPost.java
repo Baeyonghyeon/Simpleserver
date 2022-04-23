@@ -1,15 +1,16 @@
 package com.nhnacademy;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class BodyResourceByPost {
 
-    private Map<String, String> args;
+    private Map<String, String> args = new HashMap<>();
     private String data;
-    private Map<String, String> files;
-    private Map<String, String> form;
-    private Map<String, String> headers;
-    private Map<String, String> json;
+    private Map<String, String> files = new HashMap<>();
+    private Map<String, String> form = new HashMap<>();
+    private Map<String, String> headers = new HashMap<>();
+    private Map<String, String> json = new HashMap<>();
     private String origin;
     private String url;
 
@@ -33,8 +34,8 @@ public class BodyResourceByPost {
         return headers;
     }
 
-    public void setHeaders(Map<String, String> headers) {
-        this.headers = headers;
+    public void setHeaders(String key, String value) {
+        this.headers.put(key, value);
     }
 
     public String getUrl() {
@@ -57,8 +58,9 @@ public class BodyResourceByPost {
         return files;
     }
 
-    public void setFiles(Map<String, String> files) {
-        this.files = files;
+    //TODO : 사용할거
+    public void setFiles(String key, String value) {
+        this.files.put(key, value);
     }
 
     public Map<String, String> getForm() {
