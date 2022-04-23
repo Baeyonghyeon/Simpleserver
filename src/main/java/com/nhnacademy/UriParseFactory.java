@@ -7,6 +7,7 @@ import java.util.List;
 
 public class UriParseFactory {
 
+    //header
     static String methodLine;
     static String method; // GET
     static String location; // /get
@@ -16,10 +17,15 @@ public class UriParseFactory {
     static String userAgent;
     static String accept;
     static String contentType = "application/json";
-    static List<String> data = new ArrayList<>();
-
     //헤더에 인자를 넣어 get 요청을 할때 사용합니다.
     static HashMap<String, String> args = new HashMap<>();
+
+
+    //body
+    static String body;
+    static HashMap<String,String> bodyJson = new HashMap<>();
+
+
 
 
     public static String uri() {
@@ -47,8 +53,14 @@ public class UriParseFactory {
         }
     }
 
-    public static void init(){
+    public static void bodyDataExtract(){
         methodLineSeparate();
-        argExtract();
+        String arg[] = body.split(",");
+        for(String str : arg){
+            str = str.replace("{", "");
+            str = str.replace("}", "");
+            String ary[] = str.split(":");
+            bodyJson.put(ary[0],ary[1]);
+        }
     }
 }
