@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.time.*;
+import java.util.Arrays;
 
-public class Server {
+import static com.nhnacademy.UriParseFactory.*;
+
+public class Server2 {
 
     /**
      * < HTTP/1.1 200 OK                            200이랑 400번만 하는걸로.
@@ -28,13 +30,13 @@ public class Server {
         server.run();
     }
     public void run(){
-            //local : 127.0.0.1, port : 80
-            try (ServerSocket serverSocket = new ServerSocket(80);
-                 Socket socket = serverSocket.accept();
-                 PrintStream networkOut = new PrintStream(socket.getOutputStream());
-                 ) {
-                //BufferedReader networkIn = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"))
-                // 응답 내용
+        //local : 127.0.0.1, port : 80
+        try (ServerSocket serverSocket = new ServerSocket(80);
+             Socket socket = serverSocket.accept();
+             PrintStream networkOut = new PrintStream(socket.getOutputStream());
+        ) {
+            //BufferedReader networkIn = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"))
+            // 응답 내용
 //                String line = null;
 //                String bodyInfo = null;
 //                while ((line = networkIn.readLine()) != null) {
@@ -61,11 +63,12 @@ public class Server {
 //                }
 //                System.out.println("head end");
 
-                byte[] bytes = new byte[300];
-                socket.getInputStream().read(bytes);
-                StringBuilder sb = new StringBuilder();
-                BufferedReader bodyIn = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(bytes)));
-                bodyIn.lines().peek(System.out::println).forEach(lin -> sb.append(lin).append(System.lineSeparator()));
+            byte[] bytes = new byte[300];
+            socket.getInputStream().read(bytes);
+            StringBuilder sb = new StringBuilder();
+            BufferedReader bodyIn = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(bytes)));
+            bodyIn.lines().peek(System.out::println).forEach(lin -> sb.append(lin).append(System.lineSeparator()));
+
 //                System.out.println("data : "+ data.toString());
 //                bodyInfo = loop(UriParseFactory.methodLine, socket);
 
@@ -88,9 +91,9 @@ public class Server {
 //                output.append(bodyInfo);
 //                networkOut.append(output);
 
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 

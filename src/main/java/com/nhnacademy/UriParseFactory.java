@@ -1,5 +1,6 @@
 package com.nhnacademy;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +15,8 @@ public class UriParseFactory {
     static String host;
     static String userAgent;
     static String accept;
+    static String contentType = "application/json";
+    static List<String> data = new ArrayList<>();
 
     //헤더에 인자를 넣어 get 요청을 할때 사용합니다.
     static HashMap<String, String> args = new HashMap<>();
@@ -37,9 +40,8 @@ public class UriParseFactory {
 
     public static void argExtract(){
         methodLineSeparate();
-        String arg = location.split("\\?")[1];
-        String strs[] = arg.split("\\&");
-        for(String str : strs){
+        String arg[] = location.split("\\?")[1].split("\\&");
+        for(String str : arg){
             String ary[] = str.split("=");
             args.put(ary[0],ary[1]);
         }
