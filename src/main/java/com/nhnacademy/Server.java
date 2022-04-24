@@ -1,15 +1,12 @@
 package com.nhnacademy;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 import static com.nhnacademy.UriParseFactory.*;
 
@@ -47,7 +44,6 @@ public class Server {
             byte[] bytes = new byte[4096];
             int numOfBytes = socket.getInputStream().read(bytes);
             String response = new String(bytes, 0, numOfBytes, "UTF-8");
-
             String input[] = response.strip().split("\r\n\r\n");
 
             requestHeader = input[0];
