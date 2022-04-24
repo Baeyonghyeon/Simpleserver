@@ -1,9 +1,6 @@
 package com.nhnacademy;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 
 public class UriParseFactory {
 
@@ -20,13 +17,12 @@ public class UriParseFactory {
     static String contentType = "application/json";
     //헤더에 인자를 넣어 get 요청을 할때 사용합니다.
     static HashMap<String, String> args = new HashMap<>();
+    static String keyName;
 
     //body
     static String contentJson;
     static String body;
-    static HashMap<String,String> bodyJson = new HashMap<>();
-
-
+    static HashMap<String, String> bodyJson = new HashMap<>();
 
 
     public static String uri() {
@@ -45,24 +41,24 @@ public class UriParseFactory {
     }
 
 
-    public static void argExtract(){
+    public static void argExtract() {
         methodLineSeparate();
         String arg[] = location.split("\\?")[1].split("\\&");
-        for(String str : arg){
+        for (String str : arg) {
             String ary[] = str.split("=");
-            args.put(ary[0],ary[1]);
+            args.put(ary[0], ary[1]);
         }
     }
 
-    public static void bodyDataExtract(){
+    public static void bodyDataExtract() {
         methodLineSeparate();
         String arg[] = body.split(",");
-        for(String str : arg){
+        for (String str : arg) {
             str = str.replace("{", "");
             str = str.replace("}", "");
-            str = str.replace("\"","");
+            str = str.replace("\"", "");
             String ary[] = str.split(":");
-            bodyJson.put(ary[0],ary[1]);
+            bodyJson.put(ary[0], ary[1]);
         }
     }
 }

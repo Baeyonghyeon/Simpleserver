@@ -35,10 +35,4 @@ public class HeadFactory {
 
         return optionField;
     }
-
-
-
-
-
-
 }

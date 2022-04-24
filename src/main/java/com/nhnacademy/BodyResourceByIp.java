@@ -1,7 +1,5 @@
 package com.nhnacademy;
 
-import java.util.List;
-
 public class BodyResourceByIp {
 
     private String origin;

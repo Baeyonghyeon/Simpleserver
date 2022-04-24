@@ -37,6 +37,7 @@ public class Server {
     public void run() {
         String requestHeader;
         String requestBody;
+        String requestJson;
         String bodyInfo = null;
 
         //local : 127.0.0.1, port : 80
@@ -54,22 +55,25 @@ public class Server {
             headerParse(requestHeader);
             methodLineSeparate();
 
-            System.out.println(requestHeader);          //헤더 출력용
-            //System.out.println("---------------------------------");    // 구분자 출력용
             if (method.equals("POST")) {
                 requestBody = input[1];
+                bodyParse(requestBody);
+
+                if (contentType.contains("multipart/form-data")) {
+                    requestJson = input[2];
+                    bodyJsonParse(requestJson);
+
+                }
+
                 body = requestBody;
                 bodyDataExtract();
                 bodyInfo = parsePost(socket);
-                System.out.println(requestBody);        //바디 출력용
+
             }
             if (method.equals("GET")) {
                 bodyInfo = parseGet(socket);
-            }
 
-            //테스트 공간
-            System.out.println("contentJson : " + contentJson);
-            //테스트 공간
+            }
 
             //TODO 헤더정보 (8줄)
             StringBuilder output = new StringBuilder();
@@ -88,13 +92,7 @@ public class Server {
             e.printStackTrace();
         }
     }
-    /***
-     *  BodyResourceByIp bodyRes = new BodyResourceByIp();
-     *  ObjectMapper objectMapper = new ObjectMapper();
-     *  bodyRes.setOrigin(socket.getRemoteSocketAddress().toString());
-     *  String bodyInfo = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(bodyRes);
-     *  bodyInfo += System.lineSeparator();
-     */
+
     private String parseGet(Socket socket) throws JsonProcessingException {
         BodyResourceByGet bodyResourceByGet = new BodyResourceByGet();
         BodyResourceByIp bodyResourceByIp = new BodyResourceByIp();
@@ -127,9 +125,7 @@ public class Server {
             bodyResourceByPost.setJson(bodyJson);
         }
         if (contentType.contains("multipart/form-data")) {
-            System.out.println("json이 번역되어 나와야 합니다 : "+createFileObject());
-            System.out.println("json이 번역되어 나와야 합니다");
-            bodyResourceByPost.setFiles("upload", "josn파일_읽은것_넣기"); //TODO  실제 파일 열어서 json파일가져와서 넣기.
+            bodyResourceByPost.setFiles(keyName, contentJson);
         }
         bodyResourceByPost.setHeaders("Accept", accept);
         bodyResourceByPost.setHeaders("Content-Type", contentType);
@@ -140,6 +136,20 @@ public class Server {
         bodyResourceByPost.setOrigin(socket.getRemoteSocketAddress().toString());
         bodyResourceByPost.setUrl(uri());
         return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(bodyResourceByPost) + System.lineSeparator();
+    }
+
+    private void bodyParse(String requestBody) {
+        String str[] = requestBody.split("\r\n");
+
+        for (String line : str) {
+            if (line.contains("Content-Disposition")) {
+                keyName = line.split(" ")[2].split("\"")[1];
+            }
+        }
+    }
+
+    private void bodyJsonParse(String requestJson) {
+        contentJson = requestJson.split("-")[0];
     }
 
     private void headerParse(String requestHeader) throws IOException {
@@ -159,8 +169,10 @@ public class Server {
                 accept = line.split(" ")[1];
             }
             if (line.startsWith("Content-Type")) {
-                contentType = line.split(" ")[1] + " " + line.split(" ")[2];
-                contentJson = line.split(" ")[2].split("=")[1];
+                contentType = line.split(" ")[1];
+                if (contentType.contains("--")) {
+                    contentType = line.split(" ")[1] + " " + line.split(" ")[2];
+                }
             }
             if (line.startsWith("Content-Length")) {
                 contentLength = line.split(" ")[1];
@@ -169,37 +181,5 @@ public class Server {
                 break;
             }
         }
-    }
-
-    private String createFileObject() throws IOException {
-
-        byte[] bytes = contentType.getBytes(StandardCharsets.UTF_8);
-
-        StringBuilder sb = new StringBuilder();
-        boolean start = false;
-
-        for (byte b: bytes) {
-            String s = Character.toString(b);
-            System.out.println(s);
-            if ("{".equals(s)) {
-                start = true;
-            }
-            if (start) {
-                sb.append(s);
-            }
-            if ("}".equals(s)) {
-                start = false;
-            }
-        }
-
-        System.out.println("data:" + sb);
-//
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        Map<String, String> tempMap = objectMapper.readValue(sb.toString(), new TypeReference<Map<String, String>>() {
-//        });
-//
-//        System.out.println(tempMap);
-
-        return sb.toString();
     }
 }
