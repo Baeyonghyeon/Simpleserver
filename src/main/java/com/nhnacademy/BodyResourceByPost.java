@@ -58,7 +58,6 @@ public class BodyResourceByPost {
         return files;
     }
 
-    //TODO : 사용할거
     public void setFiles(String key, String value) {
         this.files.put(key, value);
     }

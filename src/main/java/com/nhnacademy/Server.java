@@ -40,7 +40,6 @@ public class Server {
         String requestJson;
         String bodyInfo = null;
 
-        //local : 127.0.0.1, port : 80
         try (ServerSocket serverSocket = new ServerSocket(80);
              Socket socket = serverSocket.accept();
              PrintStream networkOut = new PrintStream(socket.getOutputStream())) {
@@ -75,7 +74,6 @@ public class Server {
 
             }
 
-            //TODO 헤더정보 (8줄)
             StringBuilder output = new StringBuilder();
             output.append(headFactory.getStateMessage());
             output.append(headFactory.getDate());
@@ -84,7 +82,6 @@ public class Server {
             output.append(headFactory.getResponseHeaderOptionField());
             output.append(System.lineSeparator());
 
-            //TODO 바디정보
             output.append(bodyInfo);
             networkOut.append(output);
 
